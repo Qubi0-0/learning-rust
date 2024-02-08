@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::thread;
 
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
-    
     let mut handles = vec![];
 
     if input.is_empty() || worker_count == 0 {
@@ -11,7 +10,7 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
 
     let text = input.join("");
     let chunk_size = std::cmp::max(1, text.len() / worker_count);
-    if chunk_size != 0  {
+    if chunk_size != 0 {
         let chunks: Vec<_> = text
             .chars()
             .collect::<Vec<_>>()
