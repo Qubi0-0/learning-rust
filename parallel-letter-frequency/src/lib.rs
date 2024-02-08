@@ -10,20 +10,18 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
 
     let text = input.join("");
     let chunk_size = std::cmp::max(1, text.len() / worker_count);
-    if chunk_size != 0 {
-        let chunks: Vec<_> = text
-            .chars()
-            .collect::<Vec<_>>()
-            .chunks(chunk_size)
-            .map(|c| c.iter().collect::<String>())
-            .collect();
-        for chunk in chunks {
-            let handle = thread::spawn(move || string_counter(&chunk));
-            handles.push(handle);
-        }
-    } else {
-        return HashMap::new();
+
+    let chunks: Vec<_> = text
+        .chars()
+        .collect::<Vec<_>>()
+        .chunks(chunk_size)
+        .map(|c| c.iter().collect::<String>())
+        .collect();
+    for chunk in chunks {
+        let handle = thread::spawn(move || string_counter(&chunk));
+        handles.push(handle);
     }
+    
 
     let mut frequency = HashMap::new();
 
