@@ -10,8 +10,8 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     }
 
     let text = input.join("");
-    let chunk_size = text.len() / worker_count;
-    if chunk_size != 0 {
+    let chunk_size = std::cmp::max(1, text.len() / worker_count);
+    if chunk_size != 0  {
         let chunks: Vec<_> = text
             .chars()
             .collect::<Vec<_>>()
