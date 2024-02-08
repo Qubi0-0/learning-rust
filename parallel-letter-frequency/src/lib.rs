@@ -21,7 +21,6 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
         let handle = thread::spawn(move || string_counter(&chunk));
         handles.push(handle);
     }
-    
 
     let mut frequency = HashMap::new();
 
