@@ -10,10 +10,17 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     }
 }
 
+fn count_hand (hand: str) -> u32 {
+    let chunks = hand.split(' ').collect();
+    
+}
 
-// S - Spades
-// C - Clubs
-// H - Hearts
-// D - Diamonds
-// NO RANK in Suits!
+
+/*
+S - Spades
+C - Clubs
+H - Hearts
+D - Diamonds
+NO RANK in Suits!
+*/
 
