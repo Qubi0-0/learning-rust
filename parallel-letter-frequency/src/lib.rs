@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use std::thread;
 
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
-    let mut handles = vec![];
-
     if input.is_empty() || worker_count == 0 {
         return HashMap::new();
     }
@@ -15,16 +13,15 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
         .chars()
         .collect::<Vec<_>>()
         .chunks(chunk_size)
-        .map(|c| c.iter().collect::<String>())
+        .map(|chunk| {
+            let chunk_string = chunk.iter().collect::<String>();
+            thread::spawn(move || string_counter(&chunk_string))
+        })
         .collect();
-    for chunk in chunks {
-        let handle = thread::spawn(move || string_counter(&chunk));
-        handles.push(handle);
-    }
 
     let mut frequency = HashMap::new();
 
-    for handle in handles {
+    for handle in chunks {
         let thread_frequency = handle.join().unwrap();
         for (key, value) in thread_frequency {
             *frequency.entry(key).or_insert(0) += value;
