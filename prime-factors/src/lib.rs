@@ -5,10 +5,10 @@ pub fn factors(n: u64) -> Vec<u64> {
     while value != 1 {
         if value % divider == 0 {
             dividers.push(divider);
-            value = value / divider;
+            value /= divider;
             divider = 2;
         } else {
-            divider = divider + 1;
+            divider += 1;
         }
     }
     dividers
