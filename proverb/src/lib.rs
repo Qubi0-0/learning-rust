@@ -1,4 +1,7 @@
 pub fn build_proverb(list: &[&str]) -> String {
+    if list.is_empty() {
+        return String::new()
+    }
     let mut story = String::new();
     for (idx, word) in list.iter().skip(1).enumerate() {
         if idx < list.len() - 1 {
