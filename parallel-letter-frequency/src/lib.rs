@@ -20,16 +20,12 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
         })
         .collect();
 
-    chunks
-        .into_iter()
-        .map(|chunk| {
-            let thread_frequency = chunk.join().unwrap();
-            for (key, value) in thread_frequency {
-                *frequency.entry(key).or_insert(0) += value;
-            }
-        })
-        .for_each(|_| {});
-
+    for chunk in chunks {
+        let thread_frequency = chunk.join().unwrap();
+        for (key, value) in thread_frequency {
+            *frequency.entry(key).or_insert(0) += value;
+        }
+    }
     frequency
 }
 
