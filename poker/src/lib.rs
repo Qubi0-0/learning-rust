@@ -4,27 +4,37 @@ use std::{mem::transmute, vec};
 ///
 /// Note the type signature: this function should return _the same_ reference to
 /// the winning hand(s) as were passed in, not reconstructed strings which happen to be equal.
-struct HandRank {
+struct HandRank<'a> {
+    hand: &'a str,
     rank: u16,
     tie_breaker: String,
+    index: usize,
 }
 
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     if hands.len() == 1 {
         vec![hands[0]]
     } else if hands.iter().all(|hand| hand.replace(" ", "").len() == 10) {
+        let mut ranking: Vec<HandRank> = vec![];
+        for (idx, hand) in hands.iter().enumerate() {
+            let mut hand_rank = HandRank {
+                hand: hand,
+                rank: 0,
+                tie_breaker: String::new(),
+                index: idx,
+            };
+            hand_rank = rank_hand(hand_rank);
+            ranking.push(hand_rank);
+        }
         todo!()
     } else {
-        panic!("Card are not with correct lenght!!")
+        panic!("Card Hands are not Valid!!")
     }
 }
 
-fn rank_hand(hand: &str) -> HandRank {
-    let mut hand_rank = HandRank {
-        rank: 0,
-        tie_breaker: String::new(),
-    };
-    let sorted_hand: Vec<(u16, &str)> = hand
+fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
+    let mut hand_rank = hand_rank;
+    let sorted_hand: Vec<(u16, &str)> = hand_rank.hand
         .split_whitespace()
         .map(|card| {
             let (num, suit) = card.split_at(1);
@@ -79,7 +89,7 @@ fn rank_hand(hand: &str) -> HandRank {
     }
 
     // Pairs
-    
+
 
     hand_rank
 }
