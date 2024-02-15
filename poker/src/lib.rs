@@ -1,4 +1,4 @@
-use std::vec;
+use std::{collections::HashMap, vec};
 
 /// Given a list of poker hands, return a list of those hands which win.
 ///
@@ -8,36 +8,39 @@ struct HandRank<'a> {
     hand: &'a str,
     rank: u16,
     tie_breaker: String,
-    index: usize,
 }
 
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     if hands.len() == 1 {
         vec![hands[0]]
-    } else if hands.iter().all(|hand| hand.replace(" ", "").len() == 10) {
+    } else {
         let mut ranking: Vec<HandRank> = vec![];
-        for (idx, hand) in hands.iter().enumerate() {
+        for hand in hands {
             let mut hand_rank = HandRank {
                 hand: hand,
-                rank: 0,
+                rank: 9,
                 tie_breaker: String::new(),
-                index: idx,
             };
             hand_rank = rank_hand(hand_rank);
             ranking.push(hand_rank);
         }
-        todo!()
-    } else {
-        panic!("Card Hands are not Valid!!")
+        ranking.sort_by(|a, b| a.rank.cmp(&b.rank));
+        let highest_rank = ranking[0].rank;
+        ranking
+            .into_iter()
+            .filter(|hand_rank| hand_rank.rank == highest_rank)
+            .map(|hand_rank| hand_rank.hand)
+            .collect()
     }
 }
 
 fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
     let mut hand_rank = hand_rank;
-    let sorted_hand: Vec<(u16, &str)> = hand_rank.hand
+    let sorted_hand: Vec<(u16, &str)> = hand_rank
+        .hand
         .split_whitespace()
         .map(|card| {
-            let (num, suit) = card.split_at(1);
+            let (num, suit) = card.split_at(card.len() - 1);
             let num = match num {
                 "2" => 2,
                 "3" => 3,
@@ -57,10 +60,10 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
             (num, suit)
         })
         .collect();
-
     let mut numbers: Vec<_> = sorted_hand.iter().map(|&(num, _)| num).collect();
     let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
+    hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
     // Flush (+ Straight?)
     if suits.iter().eq(suits.iter()) {
         let mut is_straight = true;
@@ -70,7 +73,7 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
         for &number in &numbers[1..] {
             if number != prev_number + 1 {
                 // Flush
-                if hand_rank.rank < 4 {
+                if hand_rank.rank > 4 {
                     hand_rank.rank = 4;
                     hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
                 }
@@ -81,16 +84,77 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
         }
         if is_straight {
             // Straight Flush
-            if hand_rank.rank < 4 {
+            if hand_rank.rank > 1 {
                 hand_rank.rank = 1;
                 hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
             }
+            return hand_rank;
         }
     }
 
     // Pairs
+    let mut pair_hm: HashMap<u16, u16> = HashMap::new();
+    for &number in &numbers {
+        if pair_hm.contains_key(&number) {
+            let count = pair_hm.get_mut(&number).unwrap();
+            *count += 1;
+        } else {
+            pair_hm.insert(number, 1);
+        }
+    }
 
+    let mut house_check = false;
+    let mut two_pair_check = false;
 
+    for (number, count) in &pair_hm {
+        // Four of a kind
+        if *count == 4 {
+            if hand_rank.rank > 2 {
+                hand_rank.rank = 2;
+                hand_rank.tie_breaker = number.to_string();
+                return hand_rank;
+            } // Three of kind
+        } else if *count == 3 {
+            // is Full house?
+            if house_check {
+                if hand_rank.rank > 3 {
+                    hand_rank.rank = 3;
+                    hand_rank.tie_breaker = number.to_string();
+                    return hand_rank;
+                }
+            } else {
+                if hand_rank.rank > 6 {
+                    hand_rank.rank = 6;
+                    hand_rank.tie_breaker = number.to_string();
+                    house_check = true;
+                }
+            } // Pair
+        } else if *count == 2 {
+            // is Full house?
+            if house_check {
+                if hand_rank.rank > 3 {
+                    hand_rank.rank = 3;
+                    return hand_rank;
+                } // Second Pair
+            } else if two_pair_check {
+                if hand_rank.rank > 7 {
+                    hand_rank.rank = 7;
+                    if hand_rank.tie_breaker.parse::<u16>().unwrap() < *number {
+                        hand_rank.tie_breaker = number.to_string();
+                    }
+                    return hand_rank;
+                }
+            } else {
+                // First Pair
+                if hand_rank.rank > 8 {
+                    hand_rank.rank = 8;
+                    hand_rank.tie_breaker = number.to_string();
+                    house_check = true;
+                    two_pair_check = true;
+                }
+            }
+        }
+    }
     hand_rank
 }
 
