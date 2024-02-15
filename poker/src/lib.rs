@@ -1,4 +1,4 @@
-use std::{mem::transmute, vec};
+use std::vec;
 
 /// Given a list of poker hands, return a list of those hands which win.
 ///
