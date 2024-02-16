@@ -64,10 +64,10 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
     let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
     hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
-    // Flush (+ Straight?)
-    if suits.iter().eq(suits.iter()) {
-        let mut is_straight = true;
 
+    // Flush (+ Straight?)
+    if suits.iter().all(|&suit| suit == suits[0]) {
+        let mut is_straight = true;
         numbers.sort();
         let mut prev_number = numbers[0];
         for &number in &numbers[1..] {
@@ -90,6 +90,23 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
             }
             return hand_rank;
         }
+    } else {
+        let mut is_straight = true;
+        numbers.sort();
+        let mut prev_number = numbers[0];
+        for &number in &numbers[1..] {
+            if number != prev_number + 1 {
+                is_straight = false;
+                break;
+            }
+            prev_number = number;
+        }
+        if is_straight {
+            if hand_rank.rank > 5 {
+                hand_rank.rank = 5;
+                hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
+            }
+        }
     }
 
     // Pairs
@@ -106,7 +123,10 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
     let mut house_check = false;
     let mut two_pair_check = false;
 
-    for (number, count) in &pair_hm {
+    let mut pair_vec: Vec<_> = pair_hm.into_iter().collect();
+    pair_vec.sort_by(|number, count| count.1.cmp(&number.1));
+
+    for (number, count) in &pair_vec {
         // Four of a kind
         if *count == 4 {
             if hand_rank.rank > 2 {
@@ -149,7 +169,6 @@ fn rank_hand(hand_rank: HandRank<'_>) -> HandRank {
                 if hand_rank.rank > 8 {
                     hand_rank.rank = 8;
                     hand_rank.tie_breaker = number.to_string();
-                    house_check = true;
                     two_pair_check = true;
                 }
             }
