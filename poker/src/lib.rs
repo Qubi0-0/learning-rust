@@ -64,16 +64,14 @@ impl<'a> HandRank<'a> {
         let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
         hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
-        numbers.sort();
         // Checking if hand is straight
-        let mut is_straight = check_straight(&numbers);
+        let mut is_straight = check_straight(&mut numbers);
         if is_straight == false && numbers.iter().max().unwrap() == &14 {
             numbers = numbers
-            .iter()
-            .map(|&number| if number == 14 { 1 } else { number })
-            .collect::<Vec<u16>>();
-            numbers.sort();
-            is_straight = check_straight(&numbers);
+                .iter()
+                .map(|&number| if number == 14 { 1 } else { number })
+                .collect::<Vec<u16>>();
+            is_straight = check_straight(&mut numbers);
         }
         // Flush
         if suits.iter().all(|&suit| suit == suits[0]) {
@@ -163,7 +161,8 @@ impl<'a> HandRank<'a> {
     }
 }
 
-fn check_straight(numbers: &Vec<u16>) -> bool {
+fn check_straight(numbers: &mut Vec<u16>) -> bool {
+    numbers.sort();
     let mut prev_number = numbers[0];
     for &number in &numbers[1..] {
         if number != prev_number + 1 {
