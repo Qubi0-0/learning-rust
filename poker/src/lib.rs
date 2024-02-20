@@ -32,9 +32,12 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             }
         });
         let highest_rank = ranking[0].rank;
+        let highest_tie_breaker = ranking[0].tie_breaker;
         ranking
             .into_iter()
-            .filter(|hand_rank| hand_rank.rank == highest_rank)
+            .filter(|hand_rank| {
+                hand_rank.rank == highest_rank && hand_rank.tie_breaker == highest_tie_breaker
+            })
             .map(|hand_rank| hand_rank.hand)
             .collect()
     }
@@ -86,13 +89,14 @@ impl<'a> HandRank<'a> {
                 if hand_rank.rank > 1 {
                     hand_rank.rank = 1;
                     hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    return hand_rank;
                 }
-                return hand_rank;
             } else {
                 // Flush
                 if hand_rank.rank > 4 {
                     hand_rank.rank = 4;
                     hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    return hand_rank;
                 }
             }
         } else {
@@ -100,6 +104,7 @@ impl<'a> HandRank<'a> {
                 if hand_rank.rank > 5 {
                     hand_rank.rank = 5;
                     hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    return hand_rank;
                 }
             }
         }
@@ -170,6 +175,10 @@ impl<'a> HandRank<'a> {
                             two_pair_check = true;
                         }
                     }
+                }
+                1 => {
+                    let ranks: Vec<_> = numbers.iter().map(|&number| 15 - number).collect();
+                    hand_rank.tie_breaker = *ranks.iter().min().unwrap();
                 }
                 _ => {}
             }
