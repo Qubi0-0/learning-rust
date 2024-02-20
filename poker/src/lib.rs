@@ -66,7 +66,15 @@ impl<'a> HandRank<'a> {
         hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
         numbers.sort();
         // Checking if hand is straight
-        let is_straight = check_straight(&numbers);
+        let mut is_straight = check_straight(&numbers);
+        if is_straight == false && numbers.iter().max().unwrap() == &14 {
+            numbers = numbers
+            .iter()
+            .map(|&number| if number == 14 { 1 } else { number })
+            .collect::<Vec<u16>>();
+            numbers.sort();
+            is_straight = check_straight(&numbers);
+        }
         // Flush
         if suits.iter().all(|&suit| suit == suits[0]) {
             if is_straight {
