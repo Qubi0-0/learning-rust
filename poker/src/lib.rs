@@ -132,7 +132,7 @@ impl<'a> HandRank<'a> {
                     // Four of a kind
                     if hand_rank.rank > 2 {
                         hand_rank.rank = 2;
-                        hand_rank.tie_breaker = *number;
+                        hand_rank.tie_breaker = 15 - *number;
                         return hand_rank;
                     }
                 }
@@ -141,13 +141,13 @@ impl<'a> HandRank<'a> {
                     if house_check {
                         if hand_rank.rank > 3 {
                             hand_rank.rank = 3;
-                            hand_rank.tie_breaker = *number;
+                            hand_rank.tie_breaker = 15 - *number;
                             return hand_rank;
                         }
                     } else {
                         if hand_rank.rank > 6 {
                             hand_rank.rank = 6;
-                            hand_rank.tie_breaker = *number;
+                            hand_rank.tie_breaker = 15 - *number;
                             house_check = true;
                         }
                     }
@@ -162,8 +162,8 @@ impl<'a> HandRank<'a> {
                     } else if two_pair_check {
                         if hand_rank.rank > 7 {
                             hand_rank.rank = 7;
-                            if hand_rank.tie_breaker < *number {
-                                hand_rank.tie_breaker = *number;
+                            if hand_rank.tie_breaker > *number {
+                                hand_rank.tie_breaker = 15 - number;
                             }
                             return hand_rank;
                         }
@@ -171,14 +171,16 @@ impl<'a> HandRank<'a> {
                         // First Pair
                         if hand_rank.rank > 8 {
                             hand_rank.rank = 8;
-                            hand_rank.tie_breaker = *number;
+                            hand_rank.tie_breaker = 15 - number;
                             two_pair_check = true;
                         }
                     }
                 }
                 1 => {
-                    let ranks: Vec<_> = numbers.iter().map(|&number| 15 - number).collect();
-                    hand_rank.tie_breaker = *ranks.iter().min().unwrap();
+                    if hand_rank.rank == 9 {
+                        hand_rank.tie_breaker =
+                            numbers.iter().map(|&number| 15 - number).min().unwrap();
+                    }
                 }
                 _ => {}
             }
