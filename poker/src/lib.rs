@@ -7,7 +7,7 @@ use std::{collections::HashMap, vec};
 struct HandRank<'a> {
     hand: &'a str,
     rank: u16,
-    tie_breaker: String,
+    tie_breaker: u16,
 }
 
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
@@ -19,12 +19,18 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             let mut hand_rank = HandRank {
                 hand: hand,
                 rank: 9,
-                tie_breaker: String::new(),
+                tie_breaker: 0,
             };
             hand_rank = HandRank::<'_>::rank_hand(hand_rank);
             ranking.push(hand_rank);
         }
-        ranking.sort_by(|a, b| a.rank.cmp(&b.rank));
+        ranking.sort_by(|a, b| {
+            if a.rank == b.rank {
+                a.tie_breaker.cmp(&b.tie_breaker)
+            } else {
+                a.rank.cmp(&b.rank)
+            }
+        });
         let highest_rank = ranking[0].rank;
         ranking
             .into_iter()
@@ -63,7 +69,7 @@ impl<'a> HandRank<'a> {
         let mut numbers: Vec<_> = sorted_hand.iter().map(|&(num, _)| num).collect();
         let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
-        hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
+        hand_rank.tie_breaker = *numbers.iter().max().unwrap();
         // Checking if hand is straight
         let mut is_straight = check_straight(&mut numbers);
         if is_straight == false && numbers.iter().max().unwrap() == &14 {
@@ -79,15 +85,21 @@ impl<'a> HandRank<'a> {
                 // Straight Flush
                 if hand_rank.rank > 1 {
                     hand_rank.rank = 1;
-                    hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
+                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
                 }
                 return hand_rank;
+            } else {
+                // Flush
+                if hand_rank.rank > 4 {
+                    hand_rank.rank = 4;
+                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                }
             }
         } else {
             if is_straight {
                 if hand_rank.rank > 5 {
                     hand_rank.rank = 5;
-                    hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
+                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
                 }
             }
         }
@@ -110,51 +122,56 @@ impl<'a> HandRank<'a> {
         pair_vec.sort_by(|number, count| count.1.cmp(&number.1));
 
         for (number, count) in &pair_vec {
-            // Four of a kind
-            if *count == 4 {
-                if hand_rank.rank > 2 {
-                    hand_rank.rank = 2;
-                    hand_rank.tie_breaker = number.to_string();
-                    return hand_rank;
-                } // Three of kind
-            } else if *count == 3 {
-                // is Full house?
-                if house_check {
-                    if hand_rank.rank > 3 {
-                        hand_rank.rank = 3;
-                        hand_rank.tie_breaker = number.to_string();
+            match *count {
+                4 => {
+                    // Four of a kind
+                    if hand_rank.rank > 2 {
+                        hand_rank.rank = 2;
+                        hand_rank.tie_breaker = *number;
                         return hand_rank;
-                    }
-                } else {
-                    if hand_rank.rank > 6 {
-                        hand_rank.rank = 6;
-                        hand_rank.tie_breaker = number.to_string();
-                        house_check = true;
-                    }
-                } // Pair
-            } else if *count == 2 {
-                // is Full house?
-                if house_check {
-                    if hand_rank.rank > 3 {
-                        hand_rank.rank = 3;
-                        return hand_rank;
-                    } // Second Pair
-                } else if two_pair_check {
-                    if hand_rank.rank > 7 {
-                        hand_rank.rank = 7;
-                        if hand_rank.tie_breaker.parse::<u16>().unwrap() < *number {
-                            hand_rank.tie_breaker = number.to_string();
-                        }
-                        return hand_rank;
-                    }
-                } else {
-                    // First Pair
-                    if hand_rank.rank > 8 {
-                        hand_rank.rank = 8;
-                        hand_rank.tie_breaker = number.to_string();
-                        two_pair_check = true;
                     }
                 }
+                3 => {
+                    // is Full house?
+                    if house_check {
+                        if hand_rank.rank > 3 {
+                            hand_rank.rank = 3;
+                            hand_rank.tie_breaker = *number;
+                            return hand_rank;
+                        }
+                    } else {
+                        if hand_rank.rank > 6 {
+                            hand_rank.rank = 6;
+                            hand_rank.tie_breaker = *number;
+                            house_check = true;
+                        }
+                    }
+                }
+                2 => {
+                    // is Full house?
+                    if house_check {
+                        if hand_rank.rank > 3 {
+                            hand_rank.rank = 3;
+                            return hand_rank;
+                        }
+                    } else if two_pair_check {
+                        if hand_rank.rank > 7 {
+                            hand_rank.rank = 7;
+                            if hand_rank.tie_breaker < *number {
+                                hand_rank.tie_breaker = *number;
+                            }
+                            return hand_rank;
+                        }
+                    } else {
+                        // First Pair
+                        if hand_rank.rank > 8 {
+                            hand_rank.rank = 8;
+                            hand_rank.tie_breaker = *number;
+                            two_pair_check = true;
+                        }
+                    }
+                }
+                _ => {}
             }
         }
         hand_rank
