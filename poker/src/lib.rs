@@ -64,24 +64,11 @@ impl<'a> HandRank<'a> {
         let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
         hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
-
-        // Flush (+ Straight?)
+        numbers.sort();
+        // Checking if hand is straight
+        let is_straight = check_straight(&numbers);
+        // Flush
         if suits.iter().all(|&suit| suit == suits[0]) {
-            let mut is_straight = true;
-            numbers.sort();
-            let mut prev_number = numbers[0];
-            for &number in &numbers[1..] {
-                if number != prev_number + 1 {
-                    // Flush
-                    if hand_rank.rank > 4 {
-                        hand_rank.rank = 4;
-                        hand_rank.tie_breaker = numbers.iter().max().unwrap().to_string();
-                    }
-                    is_straight = false;
-                    break;
-                }
-                prev_number = number;
-            }
             if is_straight {
                 // Straight Flush
                 if hand_rank.rank > 1 {
@@ -91,16 +78,6 @@ impl<'a> HandRank<'a> {
                 return hand_rank;
             }
         } else {
-            let mut is_straight = true;
-            numbers.sort();
-            let mut prev_number = numbers[0];
-            for &number in &numbers[1..] {
-                if number != prev_number + 1 {
-                    is_straight = false;
-                    break;
-                }
-                prev_number = number;
-            }
             if is_straight {
                 if hand_rank.rank > 5 {
                     hand_rank.rank = 5;
@@ -177,6 +154,18 @@ impl<'a> HandRank<'a> {
         hand_rank
     }
 }
+
+fn check_straight(numbers: &Vec<u16>) -> bool {
+    let mut prev_number = numbers[0];
+    for &number in &numbers[1..] {
+        if number != prev_number + 1 {
+            return false;
+        }
+        prev_number = number;
+    }
+    true
+}
+
 /*
 S - Spades
 C - Clubs
