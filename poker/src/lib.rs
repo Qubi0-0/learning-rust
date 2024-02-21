@@ -24,19 +24,18 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             hand_rank = HandRank::<'_>::rank_hand(hand_rank);
             ranking.push(hand_rank);
         }
-        ranking.sort_by(|a, b| {
-            if a.rank == b.rank {
-                a.tie_breaker.cmp(&b.tie_breaker)
-            } else {
-                a.rank.cmp(&b.rank)
-            }
-        });
+        ranking.sort_by(|a, b| a.rank.cmp(&b.rank));
         let highest_rank = ranking[0].rank;
-        ranking
+        let filtered_ranking = ranking
             .into_iter()
             .filter(|hand_rank| hand_rank.rank == highest_rank)
-            .map(|hand_rank| hand_rank.hand)
-            .collect()
+            .collect::<Vec<HandRank>>();
+        if filtered_ranking.len() > 1 {
+        break_ties(&filtered_ranking)
+        }
+        else {
+            filtered_ranking.into_iter().map(|hand_rank| hand_rank.hand).collect()
+        }
     }
 }
 impl<'a> HandRank<'a> {
@@ -195,6 +194,10 @@ fn check_straight(numbers: &mut Vec<u16>) -> bool {
         prev_number = number;
     }
     true
+}
+
+fn break_ties<'a>(ranking: &Vec<HandRank<'a>>) -> Vec<&'a str> {
+    todo!()
 }
 
 /*
