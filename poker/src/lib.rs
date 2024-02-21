@@ -88,14 +88,14 @@ impl<'a> HandRank<'a> {
                 // Straight Flush
                 if hand_rank.rank > 1 {
                     hand_rank.rank = 1;
-                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker = 15 -  *numbers.iter().max().unwrap();
                     return hand_rank;
                 }
             } else {
                 // Flush
                 if hand_rank.rank > 4 {
                     hand_rank.rank = 4;
-                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker = 15 - *numbers.iter().max().unwrap();
                     return hand_rank;
                 }
             }
@@ -103,7 +103,7 @@ impl<'a> HandRank<'a> {
             if is_straight {
                 if hand_rank.rank > 5 {
                     hand_rank.rank = 5;
-                    hand_rank.tie_breaker = *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker = 15 - *numbers.iter().max().unwrap();
                     return hand_rank;
                 }
             }
