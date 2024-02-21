@@ -7,7 +7,7 @@ use std::{collections::HashMap, vec};
 struct HandRank<'a> {
     hand: &'a str,
     rank: u16,
-    tie_breaker: u16,
+    tie_breaker: Vec<u16>,
 }
 
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
@@ -19,7 +19,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             let mut hand_rank = HandRank {
                 hand: hand,
                 rank: 9,
-                tie_breaker: 0,
+                tie_breaker: vec![],
             };
             hand_rank = HandRank::<'_>::rank_hand(hand_rank);
             ranking.push(hand_rank);
@@ -32,12 +32,9 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             }
         });
         let highest_rank = ranking[0].rank;
-        let highest_tie_breaker = ranking[0].tie_breaker;
         ranking
             .into_iter()
-            .filter(|hand_rank| {
-                hand_rank.rank == highest_rank && hand_rank.tie_breaker == highest_tie_breaker
-            })
+            .filter(|hand_rank| hand_rank.rank == highest_rank)
             .map(|hand_rank| hand_rank.hand)
             .collect()
     }
@@ -72,15 +69,17 @@ impl<'a> HandRank<'a> {
         let mut numbers: Vec<_> = sorted_hand.iter().map(|&(num, _)| num).collect();
         let suits: Vec<_> = sorted_hand.iter().map(|&(_, suit)| suit).collect();
 
-        hand_rank.tie_breaker = *numbers.iter().max().unwrap();
         // Checking if hand is straight
         let mut is_straight = check_straight(&mut numbers);
         if is_straight == false && numbers.iter().max().unwrap() == &14 {
-            numbers = numbers
+            let mut numbers_copy = numbers
                 .iter()
                 .map(|&number| if number == 14 { 1 } else { number })
                 .collect::<Vec<u16>>();
-            is_straight = check_straight(&mut numbers);
+            is_straight = check_straight(&mut numbers_copy);
+            if is_straight {
+                numbers = numbers_copy;
+            }
         }
         // Flush
         if suits.iter().all(|&suit| suit == suits[0]) {
@@ -88,14 +87,14 @@ impl<'a> HandRank<'a> {
                 // Straight Flush
                 if hand_rank.rank > 1 {
                     hand_rank.rank = 1;
-                    hand_rank.tie_breaker = 15 -  *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker.push(*numbers.iter().max().unwrap());
                     return hand_rank;
                 }
             } else {
                 // Flush
                 if hand_rank.rank > 4 {
                     hand_rank.rank = 4;
-                    hand_rank.tie_breaker = 15 - *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker = numbers;
                     return hand_rank;
                 }
             }
@@ -103,7 +102,7 @@ impl<'a> HandRank<'a> {
             if is_straight {
                 if hand_rank.rank > 5 {
                     hand_rank.rank = 5;
-                    hand_rank.tie_breaker = 15 - *numbers.iter().max().unwrap();
+                    hand_rank.tie_breaker.push(*numbers.iter().max().unwrap());
                     return hand_rank;
                 }
             }
@@ -132,7 +131,7 @@ impl<'a> HandRank<'a> {
                     // Four of a kind
                     if hand_rank.rank > 2 {
                         hand_rank.rank = 2;
-                        hand_rank.tie_breaker = 15 - *number;
+                        hand_rank.tie_breaker.push(*number);
                         return hand_rank;
                     }
                 }
@@ -141,13 +140,13 @@ impl<'a> HandRank<'a> {
                     if house_check {
                         if hand_rank.rank > 3 {
                             hand_rank.rank = 3;
-                            hand_rank.tie_breaker = 15 - *number;
+                            hand_rank.tie_breaker.push(*number);
                             return hand_rank;
                         }
                     } else {
                         if hand_rank.rank > 6 {
                             hand_rank.rank = 6;
-                            hand_rank.tie_breaker = 15 - *number;
+                            hand_rank.tie_breaker.push(*number);
                             house_check = true;
                         }
                     }
@@ -162,24 +161,21 @@ impl<'a> HandRank<'a> {
                     } else if two_pair_check {
                         if hand_rank.rank > 7 {
                             hand_rank.rank = 7;
-                            if hand_rank.tie_breaker > *number {
-                                hand_rank.tie_breaker = 15 - number;
-                            }
+                            hand_rank.tie_breaker.push(*number);
                             return hand_rank;
                         }
                     } else {
                         // First Pair
                         if hand_rank.rank > 8 {
                             hand_rank.rank = 8;
-                            hand_rank.tie_breaker = 15 - number;
+                            hand_rank.tie_breaker.push(*number);
                             two_pair_check = true;
                         }
                     }
                 }
                 1 => {
                     if hand_rank.rank == 9 {
-                        hand_rank.tie_breaker =
-                            numbers.iter().map(|&number| 15 - number).min().unwrap();
+                        hand_rank.tie_breaker = numbers.clone();
                     }
                 }
                 _ => {}
@@ -210,14 +206,14 @@ NO RANK in Suits!
 */
 
 /*
-Straight flush  -> 1
-Four of a kind  -> 2
-Full house      -> 3
-Flush           -> 4
-Straight        -> 5
-Three of a kind -> 6
-Two pair        -> 7
-One pair        -> 8
-High Card       -> 9
+Straight flush  -> 1 - No ranking problem (Just Highest Card)
+Four of a kind  -> 2 - No ranking problem
+Full house      -> 3 - No ranking problem
+Flush           -> 4 - ranking problem
+Straight        -> 5 - No ranking problem (Just Highest Card)
+Three of a kind -> 6 - No ranking problem
+Two pair        -> 7 - ranking problem
+One pair        -> 8 - ranking problem
+High Card       -> 9 - ranking problem
 TOTAL : 9 ranks
 */
