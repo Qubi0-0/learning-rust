@@ -31,10 +31,12 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             .filter(|hand_rank| hand_rank.rank == highest_rank)
             .collect::<Vec<HandRank>>();
         if filtered_ranking.len() > 1 {
-        break_ties(&filtered_ranking)
-        }
-        else {
-            filtered_ranking.into_iter().map(|hand_rank| hand_rank.hand).collect()
+            break_ties(&filtered_ranking)
+        } else {
+            filtered_ranking
+                .into_iter()
+                .map(|hand_rank| hand_rank.hand)
+                .collect()
         }
     }
 }
@@ -196,8 +198,13 @@ fn check_straight(numbers: &mut Vec<u16>) -> bool {
     true
 }
 
-fn break_ties<'a>(ranking: &Vec<HandRank<'a>>) -> Vec<&'a str> {
-    todo!()
+fn break_ties<'a>(ranking: &[HandRank<'a>]) -> Vec<&'a str> {
+    if ranking.iter().all(|hand| hand.rank == ranking[0].rank) {
+        let hands = vec![];
+
+        return hands;
+    }
+    panic!("The ranks were not the same!")
 }
 
 /*
