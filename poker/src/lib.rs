@@ -214,7 +214,7 @@ fn break_ties<'a>(mut ranking: Vec<HandRank<'a>>) -> Vec<&'a str> {
         let mut highest_tie_breaker = ranking[0].tie_breaker.clone();
 
         for hand in &ranking[1..] {
-            let mut hand_tie_breaker = hand.tie_breaker.clone();
+            let hand_tie_breaker = hand.tie_breaker.clone();
 
             let mut is_hand_winning = false;
             let mut is_hand_tied = true;
@@ -228,7 +228,9 @@ fn break_ties<'a>(mut ranking: Vec<HandRank<'a>>) -> Vec<&'a str> {
                     break;
                 }
             }
-            if is_hand_winning || (is_hand_tied && hand.tie_breaker.len() > highest_tie_breaker.len()) {
+            if is_hand_winning
+                || (is_hand_tied && hand.tie_breaker.len() > highest_tie_breaker.len())
+            {
                 winning_hands = vec![hand.hand];
                 highest_tie_breaker = hand_tie_breaker;
             } else if is_hand_tied && hand.tie_breaker.len() == highest_tie_breaker.len() {
