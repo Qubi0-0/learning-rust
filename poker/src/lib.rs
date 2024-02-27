@@ -31,7 +31,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             .filter(|hand_rank| hand_rank.rank == highest_rank)
             .collect::<Vec<HandRank>>();
         if filtered_ranking.len() > 1 {
-            break_ties(&filtered_ranking)
+            break_ties(filtered_ranking)
         } else {
             filtered_ranking
                 .into_iter()
@@ -125,6 +125,7 @@ impl<'a> HandRank<'a> {
 
         let mut pair_vec: Vec<_> = pair_hm.into_iter().collect();
         pair_vec.sort_by(|number, count| count.1.cmp(&number.1));
+        hand_rank.tie_breaker = numbers.clone();
 
         for (number, count) in &pair_vec {
             match *count {
@@ -132,7 +133,8 @@ impl<'a> HandRank<'a> {
                     // Four of a kind
                     if hand_rank.rank > 2 {
                         hand_rank.rank = 2;
-                        hand_rank.tie_breaker.push(*number);
+                        hand_rank.tie_breaker.retain(|&n| n != *number);
+                        hand_rank.tie_breaker.insert(0, *number);
                         return hand_rank;
                     }
                 }
@@ -141,13 +143,15 @@ impl<'a> HandRank<'a> {
                     if house_check {
                         if hand_rank.rank > 3 {
                             hand_rank.rank = 3;
-                            hand_rank.tie_breaker.push(*number);
+                            hand_rank.tie_breaker.retain(|&n| n != *number);
+                            hand_rank.tie_breaker.insert(0, *number);
                             return hand_rank;
                         }
                     } else {
                         if hand_rank.rank > 6 {
                             hand_rank.rank = 6;
-                            hand_rank.tie_breaker.push(*number);
+                            hand_rank.tie_breaker.retain(|&n| n != *number);
+                            hand_rank.tie_breaker.insert(0, *number);
                             house_check = true;
                         }
                     }
@@ -162,21 +166,18 @@ impl<'a> HandRank<'a> {
                     } else if two_pair_check {
                         if hand_rank.rank > 7 {
                             hand_rank.rank = 7;
-                            hand_rank.tie_breaker.push(*number);
+                            hand_rank.tie_breaker.retain(|&n| n != *number);
+                            hand_rank.tie_breaker.insert(0, *number);
                             return hand_rank;
                         }
                     } else {
                         // First Pair
                         if hand_rank.rank > 8 {
                             hand_rank.rank = 8;
-                            hand_rank.tie_breaker.push(*number);
+                            hand_rank.tie_breaker.retain(|&n| n != *number);
+                            hand_rank.tie_breaker.insert(0, *number);
                             two_pair_check = true;
                         }
-                    }
-                }
-                1 => {
-                    if hand_rank.rank == 9 {
-                        hand_rank.tie_breaker = numbers.clone();
                     }
                 }
                 _ => {}
@@ -198,15 +199,47 @@ fn check_straight(numbers: &mut Vec<u16>) -> bool {
     true
 }
 
-fn break_ties<'a>(ranking: &[HandRank<'a>]) -> Vec<&'a str> {
-    if ranking.iter().all(|hand| hand.rank == ranking[0].rank) {
-        let hands = vec![];
+fn break_ties<'a>(mut ranking: Vec<HandRank<'a>>) -> Vec<&'a str> {
+    ranking.sort_by(|a, b| {
+        let rank_comparison = b.rank.cmp(&a.rank);
+        if rank_comparison == std::cmp::Ordering::Equal {
+            b.tie_breaker.cmp(&a.tie_breaker)
+        } else {
+            rank_comparison
+        }
+    });
 
-        return hands;
+    if ranking.iter().all(|hand| hand.rank == ranking[0].rank) {
+        let mut winning_hands = vec![ranking[0].hand];
+        let mut highest_tie_breaker = ranking[0].tie_breaker.clone();
+
+        for hand in &ranking[1..] {
+            let mut hand_tie_breaker = hand.tie_breaker.clone();
+
+            let mut is_hand_winning = false;
+            let mut is_hand_tied = true;
+            for (card_hand, card_winning) in hand_tie_breaker.iter().zip(&highest_tie_breaker) {
+                if card_hand > card_winning {
+                    is_hand_winning = true;
+                    is_hand_tied = false;
+                    break;
+                } else if card_hand < card_winning {
+                    is_hand_tied = false;
+                    break;
+                }
+            }
+            if is_hand_winning || (is_hand_tied && hand.tie_breaker.len() > highest_tie_breaker.len()) {
+                winning_hands = vec![hand.hand];
+                highest_tie_breaker = hand_tie_breaker;
+            } else if is_hand_tied && hand.tie_breaker.len() == highest_tie_breaker.len() {
+                winning_hands.push(hand.hand);
+            }
+        }
+
+        return winning_hands;
     }
     panic!("The ranks were not the same!")
 }
-
 /*
 S - Spades
 C - Clubs
