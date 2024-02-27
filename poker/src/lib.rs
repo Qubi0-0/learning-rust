@@ -4,6 +4,7 @@ use std::{collections::HashMap, vec};
 ///
 /// Note the type signature: this function should return _the same_ reference to
 /// the winning hand(s) as were passed in, not reconstructed strings which happen to be equal.
+#[derive(Clone)]
 struct HandRank<'a> {
     hand: &'a str,
     rank: u16,
@@ -209,38 +210,14 @@ fn break_ties<'a>(mut ranking: Vec<HandRank<'a>>) -> Vec<&'a str> {
         }
     });
 
-    if ranking.iter().all(|hand| hand.rank == ranking[0].rank) {
-        let mut winning_hands = vec![ranking[0].hand];
-        let mut highest_tie_breaker = ranking[0].tie_breaker.clone();
+    let highest_tie_breaker = &ranking[0].tie_breaker;
 
-        for hand in &ranking[1..] {
-            let hand_tie_breaker = hand.tie_breaker.clone();
-
-            let mut is_hand_winning = false;
-            let mut is_hand_tied = true;
-            for (card_hand, card_winning) in hand_tie_breaker.iter().zip(&highest_tie_breaker) {
-                if card_hand > card_winning {
-                    is_hand_winning = true;
-                    is_hand_tied = false;
-                    break;
-                } else if card_hand < card_winning {
-                    is_hand_tied = false;
-                    break;
-                }
-            }
-            if is_hand_winning
-                || (is_hand_tied && hand.tie_breaker.len() > highest_tie_breaker.len())
-            {
-                winning_hands = vec![hand.hand];
-                highest_tie_breaker = hand_tie_breaker;
-            } else if is_hand_tied && hand.tie_breaker.len() == highest_tie_breaker.len() {
-                winning_hands.push(hand.hand);
-            }
-        }
-
-        return winning_hands;
-    }
-    panic!("The ranks were not the same!")
+    ranking
+        .clone()
+        .into_iter()
+        .filter(|hand_rank| hand_rank.tie_breaker == *highest_tie_breaker)
+        .map(|hand_rank| hand_rank.hand)
+        .collect()
 }
 /*
 S - Spades
