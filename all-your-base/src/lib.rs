@@ -36,5 +36,52 @@ pub enum Error {
 ///    However, your function must be able to process input with leading 0 digits.
 ///
 pub fn convert(number: &[u32], from_base: u32, to_base: u32) -> Result<Vec<u32>, Error> {
-    todo!("Convert {number:?} from base {from_base} to base {to_base}")
+    if to_base == 0 || to_base == 1{
+        Err(Error::InvalidOutputBase)
+    } else if from_base == 0 || from_base == 1 {
+        Err(Error::InvalidInputBase)
+    } else if from_base == to_base {
+        return Ok(number.to_vec());
+    } else if number.is_empty() {
+        Ok(vec![0])
+    } else {
+        for num in number {
+            if num >= &from_base {
+                return Err(Error::InvalidDigit(*num));
+            }
+        }
+        let input_sum = number
+            .iter()
+            .rev()
+            .enumerate()
+            .map(|(idx, digit)| digit * from_base.pow(idx as u32))
+            .sum::<u32>();
+        if input_sum == 0 {
+            return Ok(vec![0]);
+        }
+        let mut highest_divider: u32 = 1;
+        let mut iterator: u32 = 0;
+        while input_sum > highest_divider {
+            iterator += 1;
+            highest_divider = to_base.pow(iterator);
+        }
+        let mut result: Vec<u32> = vec![];
+        let mut output_sum = input_sum.clone();
+        while output_sum > 0 {
+            if output_sum > 0 {
+                if iterator > 0 {
+                    iterator -= 1
+                }
+                highest_divider = to_base.pow(iterator);
+                let result_chunk = output_sum / highest_divider;
+                output_sum -= result_chunk * highest_divider;
+                result.push(result_chunk);
+            }
+        }
+        while iterator > 0 {
+            result.push(0);
+            iterator -= 1;
+        }
+        Ok(result)
+    }
 }
