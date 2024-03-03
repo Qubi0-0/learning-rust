@@ -36,9 +36,9 @@ pub enum Error {
 ///    However, your function must be able to process input with leading 0 digits.
 ///
 pub fn convert(number: &[u32], from_base: u32, to_base: u32) -> Result<Vec<u32>, Error> {
-    if to_base == 0 || to_base == 1{
+    if to_base <= 1{
         Err(Error::InvalidOutputBase)
-    } else if from_base == 0 || from_base == 1 {
+    } else if from_base <= 1 {
         Err(Error::InvalidInputBase)
     } else if from_base == to_base {
         return Ok(number.to_vec());
