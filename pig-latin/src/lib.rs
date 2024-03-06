@@ -1,30 +1,33 @@
 pub fn translate(input: &str) -> String {
-    let vowel_list: [char; 6] = ['a','e','i','o','u','y'];
+    let vowel_list: [char; 5] = ['a', 'e', 'i', 'o', 'u'];
 
     let phrase: &str = "ay";
-
-    if vowel_list.contains(&input.chars().nth(0).unwrap_or_default()) {
-        return input.to_string() + phrase
+    if &input[0..=1] == "xr" || &input[0..=1] == "yt" {
+        return input.to_string() + phrase;
+    }
+    if vowel_list.contains(&input.chars().next().unwrap_or_default()) {
+        return input.to_string() + phrase;
     } else {
-        let word = input.chars().skip(1).collect::<String>();
-        if word.starts_with("qu") {
-            format!("{}{}{}",input.chars().next().unwrap_or_default(),word,"qu")
-        } else if !word.contains(){
-            
+        let mut suffix = String::new();
+        for char in input.chars() {
+            if !vowel_list.contains(&char) {
+                suffix.push(char);
+            }
+        }
+        if input
+            .chars()
+            .skip(suffix.len())
+            .collect::<String>()
+            .starts_with("qu")
+        {
+            format!(
+                "{}{}{}",
+                input.chars().skip(suffix.len()).collect::<String>(),
+                suffix,
+                "qu"
+            )
         } else {
-    let mut chars = word.chars();
-    let first_vowel_index = chars.position(|c| "aeiou".contains(c)).unwrap_or_else(|| word.len());
-    let (start, end) = word.split_at(first_vowel_index);
-    format!("{}{}ay", end, start)
-}
+            todo!()
+        }
     }
 }
-    
-
-
-
-
-
-
-
- 
