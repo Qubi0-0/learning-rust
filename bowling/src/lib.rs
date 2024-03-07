@@ -20,11 +20,13 @@ impl BowlingGame {
     }
 
     pub fn roll(&mut self, pins: u16) -> Result<(), Error> {
+        if pins > 10 {
+            return Err(Error::NotEnoughPinsLeft);
+        }
         if self.current_frame > 9 {
             return Err(Error::GameComplete);
         }
-
-        if pins > 10 {
+        if self.current_roll == 1 && self.frames[self.current_frame][0] + pins > 10 {
             return Err(Error::NotEnoughPinsLeft);
         }
 
@@ -65,14 +67,22 @@ impl BowlingGame {
             for i in 0..10 {
                 if self.frames[i][0] == 10 {
                     // strike
-                    score += 10 + self.frames[i + 1][0] + if self.frames[i + 1][1] > 0 {
-                        self.frames[i + 1][1]
+                    score += 10 + if i < 9 {
+                        self.frames[i + 1][0] + if self.frames[i + 1][1] > 0 {
+                            self.frames[i + 1][1]
+                        } else {
+                            self.frames[i + 2][0]
+                        }
                     } else {
-                        self.frames[i + 2][0]
+                        self.frames[i][1] + self.frames[i][2]
                     };
                 } else if self.frames[i][0] + self.frames[i][1] == 10 {
                     // spare
-                    score += 10 + self.frames[i + 1][0];
+                    score += 10 + if i < 9 {
+                        self.frames[i + 1][0]
+                    } else {
+                        self.frames[i][2]
+                    };
                 } else {
                     score += self.frames[i][0] + self.frames[i][1];
                 }
