@@ -1,5 +1,19 @@
-pub fn find(array: &[i32], key: i32) -> Option<usize> {
-    todo!(
-        "Using the binary search algorithm, find the element '{key}' in the array '{array:?}' and return its index."
-    );
+pub fn find<U: AsRef<[T]>, T: Ord>(array: U, key: T) -> Option<usize> {
+    let array = array.as_ref();
+    let mut size = array.len();
+    let mut base: usize = 0;
+    while size > 0 {
+        let half = size / 2;
+        let mid = base + half;
+        let cmp = &array[mid];
+        match cmp.cmp(&key) {
+            std::cmp::Ordering::Equal => return Some(mid),
+            std::cmp::Ordering::Less => {
+                base = mid + 1;
+                size -= half + 1;
+            }
+            std::cmp::Ordering::Greater => size = half,
+        }
+    }
+    None
 }
