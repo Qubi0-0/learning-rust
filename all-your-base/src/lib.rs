@@ -66,11 +66,11 @@ pub fn convert(number: &[u32], from_base: u32, to_base: u32) -> Result<Vec<u32>,
             highest_divider = to_base.pow(iterator);
         }
         let mut result: Vec<u32> = vec![];
-        let mut output_sum = input_sum.clone();
+        let mut output_sum = input_sum;
         while output_sum > 0 {
             if output_sum > 0 {
                 if iterator > 0 {
-                    iterator -= 1
+                    iterator = iterator.saturating_sub(1);
                 }
                 highest_divider = to_base.pow(iterator);
                 let result_chunk = output_sum / highest_divider;
