@@ -14,21 +14,21 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Rust
-        uses: actions/setup-rust@v1
+        uses: rust-lang/setup-rust@v1
         with:
           rust-version: stable
 
       - name: Discover tasks
         id: discover
         run: |
-          # collecting folders with task names
-          tasks=$(find . -maxdepth 1 -type d ! -name .)
+          # Zbieranie folderów z zadaniami
+          tasks=$(find . -maxdepth 1 -type d ! -name . ! -name .git ! -name .github)
           echo "tasks=${tasks}" >> $GITHUB_ENV
 
       - name: Run tests for each task
         run: |
           # Przechodzenie przez każdy folder i uruchamianie testów
-          for task in ${{ steps.discover.outputs.tasks }}; do
+          for task in ${{ env.tasks }}; do
             echo "Running tests in $task"
             cd "$task"
             cargo test
