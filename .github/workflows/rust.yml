@@ -1,22 +1,36 @@
-name: Rust
+name: Rust Tests
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-env:
-  CARGO_TERM_COLOR: always
+    branches:
+      - main
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+
+      - name: Discover tasks
+        id: discover
+        run: |
+          # collecting folders with task names
+          tasks=$(find . -maxdepth 1 -type d ! -name .)
+          echo "tasks=${tasks}" >> $GITHUB_ENV
+
+      - name: Run tests for each task
+        run: |
+          # Przechodzenie przez każdy folder i uruchamianie testów
+          for task in ${{ env.tasks }}; do
+            echo "Running tests in $task"
+            cd "$task"
+            cargo test
+            cd ..
+          done
