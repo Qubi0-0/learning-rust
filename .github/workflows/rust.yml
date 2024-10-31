@@ -28,7 +28,7 @@ jobs:
       - name: Run tests for each task
         run: |
           # Przechodzenie przez każdy folder i uruchamianie testów
-          for task in ${{ env.tasks }}; do
+          for task in ${{ steps.discover.outputs.tasks }}; do
             echo "Running tests in $task"
             cd "$task"
             cargo test
