@@ -18,19 +18,54 @@ jobs:
         with:
           rust-version: stable
 
-      - name: Discover tasks
-        id: discover
-        run: |
-          # Zbieranie folderów z zadaniami
-          tasks=$(find . -maxdepth 1 -type d ! -name . ! -name .git ! -name .github)
-          echo "tasks=${tasks}" >> $GITHUB_ENV
-
       - name: Run tests for each task
         run: |
-          # Przechodzenie przez każdy folder i uruchamianie testów
-          for task in ${{ steps.discover.outputs.tasks }}; do
+          tasks=(
+            acronym
+            beer-song
+            collatz-conjecture
+            etl
+            hamming
+            kindergarten-garden
+            matching-brackets
+            pangram
+            proverb
+            series
+            all-your-base
+            binary-search
+            difference-of-squares
+            gigasecond
+            hello-world
+            leap
+            minesweeper
+            parallel-letter-frequency
+            raindrops
+            space-age
+            anagram
+            bob
+            diffie-hellman
+            grade-school
+            high-scores
+            luhn
+            nth-prime
+            poker
+            README.md
+            sublist
+            armstrong-numbers
+            clock
+            eliuds-eggs
+            grains
+            isogram
+            macros
+            nucleotide-count
+            prime-factors
+            reverse-string
+            sum-of-multiples
+          )
+
+          for task in "${tasks[@]}"; do
             echo "Running tests in $task"
             cd "$task"
-            cargo test
+            cargo test || exit 1  # Stop if any test fails
             cd ..
           done
